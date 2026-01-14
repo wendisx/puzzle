@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/wendisx/puzzle/pkg/clog"
 )
 
 const (
@@ -222,4 +224,126 @@ func Test_select_one(t *testing.T) {
 	page.Total = len(page.Items)
 	t.Logf("<=========================>\n")
 	t.Logf("%+v\n", page)
+}
+
+// test sqlite3 integration []
+func Test_sqlite3_integration(t *testing.T) {
+	dsn := `file:../../demo/sqlite/test.db?cache=shared&timeout=30`
+	db := InitSqlite(dsn)
+	var err error
+	// test insert [passed]
+	sqlStr := `
+	insert into namespace(id,extern_id,namespace_id,name,visible,created_at,updated_at,deleted)
+	values
+	(23, 1023, 111, 'promotion_engine', 1, '2024-01-12 09:00:00', '2024-01-12 09:00:00', 0),
+	(24, 1024, 111, 'coupon_manager', 0, '2024-01-12 10:15:00', '2024-01-12 10:15:00', 0),
+	(25, 1025, 112, 'refund_process', 1, '2024-01-13 08:30:00', '2024-01-13 08:30:00', 0),
+	(26, 1026, 112, 'loyalty_program', 1, '2024-01-13 14:20:00', '2024-01-13 14:20:00', 0),
+	(27, 1027, 113, 'tax_calculator', 1, '2024-01-14 11:00:00', '2024-01-14 11:00:00', 0);
+	`
+	err = InsertWithPlace(t.Context(), db,
+		sqlStr,
+	)
+	if err != nil {
+		clog.Panic(err.Error())
+	}
+
+	// test update [passed]
+	sqlStrs := []string{
+		`
+		UPDATE namespace 
+		SET visible = 1, updated_at = CURRENT_TIMESTAMP 
+		WHERE id = 24;
+		`,
+		`
+		UPDATE namespace 
+		SET updated_at = CURRENT_TIMESTAMP 
+		WHERE namespace_id = 112;
+		`,
+		`
+		UPDATE namespace 
+		SET deleted = 1, updated_at = CURRENT_TIMESTAMP 
+		WHERE id = 27;
+		`,
+	}
+	for i := range sqlStrs {
+		err = UpdateWithPlace(t.Context(), db, sqlStrs[i])
+		if err != nil {
+			clog.Panic(err.Error())
+		}
+	}
+
+	// test delete [passed]
+	sqlStrs = []string{
+		`DELETE FROM namespace WHERE deleted = 1`,
+		`DELETE FROM namespace WHERE extern_id = 1023`,
+	}
+	for i := range sqlStrs {
+		err = DeleteWithPlace(t.Context(), db, sqlStrs[i])
+		if err != nil {
+			clog.Panic(err.Error())
+		}
+	}
+
+	// test select [passed]
+	type (
+		NameSpace struct {
+			Id         uint64    `db:"id"`
+			ExternId   string    `db:"extern_id"`
+			CreatedAt  time.Time `db:"created_at"`
+			UpdatedAt  time.Time `db:"updated_at"`
+			Deleted    bool      `db:"deleted"`
+			Name       string    `db:"name"`
+			NamespceId int       `db:"namespace_id"`
+			Visible    int       `db:"visible"`
+		}
+	)
+	sqlStrs = []string{
+		`
+			SELECT id, name, namespace_id, created_at 
+			FROM namespace 
+			WHERE deleted = 0 AND visible = 1;
+		`,
+		`
+			SELECT id, name, updated_at 
+			FROM namespace 
+			WHERE created_at BETWEEN '2024-01-12 00:00:00' AND '2024-01-14 23:59:59' 
+			AND deleted = 0;
+			`,
+		`
+			SELECT t1.id, t1.name, t1.extern_id 
+			FROM namespace t1
+			WHERE t1.extern_id IN (1024, 1025) 
+			AND t1.visible = 1;
+		`,
+	}
+	for i := range sqlStrs {
+		switch i {
+		case 0:
+			fmt.Printf("Query all functions that have not been deleted and are still visible.\n")
+			list, err := QListWithPlace[NameSpace](t.Context(), db, sqlStrs[i])
+			if err != nil {
+				clog.Panic(err.Error())
+			} else {
+				clog.Info(fmt.Sprintf("%+v", list))
+			}
+		case 1:
+			fmt.Printf("The function to query creation within a specified time period.")
+			list, err := QListWithPlace[NameSpace](t.Context(), db, sqlStrs[i])
+			if err != nil {
+				clog.Panic(err.Error())
+			} else {
+				clog.Info(fmt.Sprintf("%+v", list))
+			}
+		case 2:
+			fmt.Printf("Related queries")
+			list, err := QListWithPlace[NameSpace](t.Context(), db, sqlStrs[i])
+			if err != nil {
+				clog.Panic(err.Error())
+			} else {
+				clog.Info(fmt.Sprintf("%+v", list))
+			}
+		}
+	}
+	clog.Info("test sqlite3 integration passed.")
 }

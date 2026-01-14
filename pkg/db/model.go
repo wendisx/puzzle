@@ -31,6 +31,15 @@ type (
 		UpdatedAt time.Time `db:"updated_at"` // updated time
 		Deleted   bool      `db:"deleted"`    // deleted or not
 	}
+	// SqliteMeta is sqlite attribute-independent metadata structure.
+	// It is generally used as an embedded structure.
+	SqliteMeta struct {
+		Id        uint64    `db:"id"`         // primary key
+		ExternId  []byte    `db:"extern_id"`  // extern id as foreign key
+		CreatedAt time.Time `db:"created_at"` // created time
+		UpdatedAt time.Time `db:"updated_at"` // updated time
+		Deleted   bool      `db:"deleted"`    // deleted or not
+	}
 )
 
 func (ni NullInt16) Int16Value() *int16 {

@@ -47,10 +47,12 @@ import (
 )
 
 const (
-	_driver_mysql = "mysql"
+	_driver_mysql  = "mysql"
+	_driver_sqlite = "sqlite3"
 
-	_default_sql_dsn  = "<user>:<password>@<proto>(<host>:<port>)[/<db_name>][?options]"
-	_conn_sql_timeout = 3 * time.Second
+	_default_mysql_dsn  = "<user>:<password>@<proto>(<host>:<port>)[/<db_name>][?options]"
+	_default_sqlite_dsn = "file:<db_name>[?{key=value&}]"
+	_conn_sql_timeout   = 3 * time.Second
 )
 
 // InsertWithPlace return error occurred during the execution of the insert SQL with placeholder parameters.

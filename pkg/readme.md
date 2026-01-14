@@ -45,6 +45,14 @@ Provides a certain degree of unified calling of the API.
 
 You need to **explicitly add the database type** you need, which means you need to know a lot of details, which is beneficial.
 
+The database driver can be found [here](https://go.dev/wiki/SQLDrivers).
+
+Integrated Database:
+- [Mysql](https://www.mysql.com)
+  - [go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)
+- [Sqlite](https://sqlite.org)
+  - [mattn/go-sqlite3](https://github.com/mattn/go-sqlite3)
+
 ## <a id="log">Log</a>
 
 Log provides the basic implementation of structured and unstructured logs, based on the standard `slog` package. The design concept is basically the same as
@@ -88,5 +96,8 @@ templates.
 
 The reference is generated using `go doc`. For more details about `go doc`, please see [here](https://go.dev/doc/comment). To browse the document locally, follow the steps below:
 
-```go
+```bash
+git clone git@github.com:wendisx/puzzle.git --depth=1
+cd ./puzzle
+go doc -http
 ```

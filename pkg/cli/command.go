@@ -71,7 +71,7 @@ func LoadCmd(path string) *Cli {
 	// set default version for cli
 	_default_intro = cli.Intro
 	_default_version = cli.Version
-	// put cli into data dict
+	// put cli into config dict
 	configDict := config.GetDict(config.DICTKEY_CONFIG)
 	configDict.Record(config.DATAKEY_CLI, &cli)
 	// load all command to dict_key(_dict_command_) data dict
