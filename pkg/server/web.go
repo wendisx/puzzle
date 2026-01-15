@@ -12,21 +12,23 @@ import (
 	"github.com/fatih/color"
 	"github.com/wendisx/puzzle/pkg/clog"
 	"github.com/wendisx/puzzle/pkg/palette"
-	"github.com/wendisx/puzzle/pkg/router"
 )
 
 const (
 	_default_quit_delay = 1 * time.Millisecond
 	_default_addr       = "127.0.0.1:3333"
+
+	_handler_echo = "Echo"
 )
 
 type (
 	// WebServer is the basic abstraction for web server.
 	// P represents the route pack.
-	WebServer[P any] interface {
-		MountRoute() router.Route[P] // return the basic root router
-		Start()                      // starting server
-		Stop()                       // stopping server
+	WebServer interface {
+		WithCheckRoute(check bool) // public set check
+		WithSwagRoute(swag bool)   // public set swagger
+		Start()                    // starting server
+		Stop()                     // stopping server
 	}
 	webServer[H http.Handler] struct {
 		h    H
@@ -58,4 +60,15 @@ func (ws *webServer[H]) stopServer(delay time.Duration) {
 	}
 	clog.Info(fmt.Sprintf("web server shutdown success after %s", palette.Green(delay)))
 	close(ws.exit)
+}
+
+func InitWebServer(handler string) WebServer {
+	clog.Info(fmt.Sprintf("web server with handler type(%s)", palette.Green(handler)))
+	switch handler {
+	case _handler_echo:
+		return InitEchoServer()
+	default:
+		clog.Panic(fmt.Sprintf("unsupported handler type(%s)", palette.Red(handler)))
+		return nil
+	}
 }

@@ -205,31 +205,35 @@ func mountFlag(verb string, cmd *cobra.Command) {
 		return
 	}
 	cli := GetCmd()
-	lFlags := cmd.LocalFlags()
-	pFlags := cmd.PersistentFlags()
+	// lFlags := cmd.LocalFlags()
+	// pFlags := cmd.PersistentFlags()
+	flags := cmd.Flags()
 	for _, f := range ParseLocalFlags(verb, _default_delimiter, cli) {
-		expandFlag(lFlags, f)
+		expandFlag(flags, f)
 	}
 	for _, f := range ParsePersistenFlags(verb, _default_delimiter, cli) {
-		expandFlag(pFlags, f)
+		expandFlag(flags, f)
 	}
 	clog.Info(fmt.Sprintf("for verb(%s) mount local and persistent flags", palette.SkyBlue(verb)))
 }
 
 func expandFlag(fset *pflag.FlagSet, f Flag) {
+	if fset.Lookup(f.FullName) != nil {
+		return
+	}
+	if fset.ShorthandLookup(f.ShortName) != nil {
+		clog.Panic(fmt.Sprintf("Shorthand '%s' is already used, skipping shorthand for %s", f.ShortName, f.FullName))
+		f.ShortName = ""
+	}
 	switch f.Type {
 	case _flag_type_bool:
-		boolVar := new(bool)
-		fset.BoolVarP(boolVar, f.FullName, f.ShortName, _default_value_bool, f.Desc)
+		fset.BoolP(f.FullName, f.ShortName, _default_value_bool, f.Desc)
 	case _flag_type_int:
-		intVar := new(int)
-		fset.IntVarP(intVar, f.FullName, f.ShortName, _default_value_int, f.Desc)
+		fset.IntP(f.FullName, f.ShortName, _default_value_int, f.Desc)
 	case _flag_type_float:
-		floatVar := new(float64)
-		fset.Float64VarP(floatVar, f.FullName, f.ShortName, _default_value_float, f.Desc)
+		fset.Float64P(f.FullName, f.ShortName, _default_value_float, f.Desc)
 	case _flag_type_string:
-		stringVar := new(string)
-		fset.StringVarP(stringVar, f.FullName, f.ShortName, _default_value_string, f.Desc)
+		fset.StringP(f.FullName, f.ShortName, _default_value_string, f.Desc)
 	default:
 		clog.Warn(fmt.Sprintf("for flag(%s) with invalid type(%s)", palette.SkyBlue(f.FullName), palette.Red(f.Type)))
 	}

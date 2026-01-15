@@ -44,10 +44,29 @@ func Test_echo(t *testing.T) {
 	s.Start()
 }
 
-// test swagger server []
+// test swagger server [passed]
 func Test_swagger(t *testing.T) {
 	// test echo swagger []
 	s := InitEchoServer()
+	rr := s.MountSwagRoute()
+	rr.Outbound()
+	s.Start()
+}
+
+// test check server [passed]
+func Test_check(t *testing.T) {
+	// test echo swagger [passed]
+	s := InitEchoServer()
+	rr := s.MountCheckRoute()
+	rr.Outbound()
+	s.Start()
+}
+
+// test many routes []
+func Test_many_route(t *testing.T) {
+	// test echo swagger [passed]
+	s := InitEchoServer()
+	_ = s.MountCheckRoute()
 	rr := s.MountSwagRoute()
 	rr.Outbound()
 	s.Start()

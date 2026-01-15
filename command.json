@@ -18,26 +18,7 @@
                     "shortDesc": "",
                     "longDesc": "",
                     "persistentFlags": [],
-                    "localFlags": [
-                        {
-                            "fullName": "host",
-                            "shortName": "h",
-                            "type": "string",
-                            "desc": "listen to the specified host"
-                        },
-                        {
-                            "fullName": "port",
-                            "shortName": "p",
-                            "type": "int",
-                            "desc": "listen to the specified port"
-                        },
-                        {
-                            "fullName": "target",
-                            "shortName": "t",
-                            "type": "string",
-                            "desc": "run on target platform"
-                        }
-                    ],
+                    "localFlags": [],
                     "subCommands": []
                 }
             ]
@@ -53,26 +34,37 @@
                     "verb": "start",
                     "shortDesc": "",
                     "longDesc": "",
-                    "persistentFlags": [
+                    "persistentFlags": [],
+                    "localFlags": [
                         {
                             "fullName": "host",
-                            "shortName": "h",
+                            "shortName": "",
                             "type": "string",
-                            "desc": "listen to the specified host"
+                            "desc": "server start host"
                         },
                         {
                             "fullName": "port",
-                            "shortName": "p",
+                            "shortName": "",
                             "type": "int",
-                            "desc": "listen to the specified port"
-                        }
-                    ],
-                    "localFlags": [
+                            "desc": "server listening port"
+                        },
                         {
-                            "fullName": "config",
-                            "shortName": "c",
+                            "fullName": "check",
+                            "shortName": "",
+                            "type": "bool",
+                            "desc": "mount check peer"
+                        },
+                        {
+                            "fullName": "swag",
+                            "shortName": "",
+                            "type": "bool",
+                            "desc": "mount swagger peer"
+                        },
+                        {
+                            "fullName": "handler",
+                            "shortName": "",
                             "type": "string",
-                            "desc": "start with config"
+                            "desc": "specify handler used by server"
                         }
                     ],
                     "subCommands": []
@@ -84,7 +76,20 @@
             "shortDesc": "",
             "longDesc": "",
             "persistentFlags": [],
-            "localFlags": [],
+            "localFlags": [
+                {
+                    "fullName": "log-directory",
+                    "shortName": "d",
+                    "type": "string",
+                    "desc": "log storage directory"
+                },
+                {
+                    "fullName": "log-file",
+                    "shortName": "f",
+                    "type": "string",
+                    "desc": "log storage file name"
+                }
+            ],
             "subCommands": []
         },
         {

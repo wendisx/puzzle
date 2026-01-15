@@ -39,14 +39,6 @@ type Config struct {
 	SwagConfig   SwagConfig   `yaml:"swagger"`     // swagger config
 }
 
-func init() {
-	// init dict directory
-	_dict_directory = new(DictDirectory)
-	// init config dict here.
-	configDict := NewDataDict[any](DICTKEY_CONFIG)
-	PutDict(configDict.Name(), configDict)
-}
-
 // DefaultConfigFile set global default config file.
 func DefaultConfigFile(path string) {
 	_default_config_file = path
@@ -54,6 +46,13 @@ func DefaultConfigFile(path string) {
 
 // LoadConfig return a pointer to all config and will panic if not exists the file path.
 func LoadConfig(path string) *Config {
+	// init dict directory
+	if _dict_directory == nil {
+		_dict_directory = new(DictDirectory)
+	}
+	// init config dict here.
+	configDict := NewDataDict[any](DICTKEY_CONFIG)
+	PutDict(configDict.Name(), configDict)
 	c := &Config{
 		DBConfig:     initDBConfig(),
 		ServerConfig: initServerConfig(),
@@ -66,7 +65,6 @@ func LoadConfig(path string) *Config {
 		return c
 	}
 	// put Config into data dict
-	configDict := GetDict(DICTKEY_CONFIG)
 	configDict.Record(DATAKEY_CONFIG, c)
 	return c
 }

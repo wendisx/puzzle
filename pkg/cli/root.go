@@ -51,6 +51,7 @@ func mountRoot() *cobra.Command {
 func Execute(mountFuncs ...func(*cobra.Command)) {
 	rootCmd := mountRoot()
 	mountVersion(rootCmd)
+	mountServer(rootCmd)
 	for i := range mountFuncs {
 		mountFuncs[i](rootCmd)
 	}
