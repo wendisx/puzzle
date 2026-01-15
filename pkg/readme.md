@@ -1,6 +1,6 @@
 ---
 author: "wendisx"
-last-updated: "2026/01/13 pm"
+last-updated: "2026/01/15 am"
 todo:
   - Improve the concept document
   - Improve the program design
@@ -92,7 +92,17 @@ integrated into a single root command (the application), thus achieving CLI inte
 is for future research and preliminary design of multi-service launchers and reusable 
 templates.
 
+## <a id="integration">Integration</a>
+
+Integrate third-party API interfaces. 
+
+| third name | website | progress | usage | 
+|:----------:|:-------:|:--------:|:-----:|
+| echoSwagger | https://github.com/swaggo/echo-swagger | default | `server.EchoServer.MountSwagRoute()` |
+
 ## <a id="reference">Reference</a>
+
+### PUZZLE API
 
 The reference is generated using `go doc`. For more details about `go doc`, please see [here](https://go.dev/doc/comment). To browse the document locally, follow the steps below:
 
@@ -101,3 +111,9 @@ git clone git@github.com:wendisx/puzzle.git --depth=1
 cd ./puzzle
 go doc -http
 ```
+
+### REST API 
+
+You can use the [Swagger tool](https://github.com/swaggo/swag) to generate integrated Open API documentation and then mount 
+the specified routes on the server. This requires the integrated web framework to handle 
+it automatically, which is no different from the default integrated echo Swagger operation.

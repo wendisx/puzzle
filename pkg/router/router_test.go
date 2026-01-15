@@ -32,7 +32,7 @@ func (up *UserPeer) Parse(p EchoPack) {
 		Handler: func(c echo.Context) error {
 			return c.String(http.StatusOK, "get info successfully.")
 		},
-		PreHandlers: []echo.MiddlewareFunc{},
+		PreHandlers: nil,
 	})
 	up.EchoPeer.Parse(p)
 }

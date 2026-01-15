@@ -33,9 +33,10 @@ var (
 
 // Config record record all possible configuration items.
 type Config struct {
+	EnvConfig    []string     `yaml:"environment"` // special environment config
 	DBConfig     DBConfig     `yaml:"database"`    // database config
 	ServerConfig ServerConfig `yaml:"server"`      // server config
-	EnvConfig    []string     `yaml:"environment"` // special environment config
+	SwagConfig   SwagConfig   `yaml:"swagger"`     // swagger config
 }
 
 func init() {

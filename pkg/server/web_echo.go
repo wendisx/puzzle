@@ -8,6 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"github.com/wendisx/puzzle/pkg/clog"
 	"github.com/wendisx/puzzle/pkg/errors"
 	"github.com/wendisx/puzzle/pkg/router"
@@ -18,6 +19,8 @@ var (
 		return false
 	}
 	_default_error_handler = errors.EchoErrHandler
+
+	_echo_swagger_path = "/swagger/*"
 )
 
 type (
@@ -71,6 +74,21 @@ func InitEchoServer() *EchoServer {
 func (es *EchoServer) MountRoute() router.Route[router.EchoPack] {
 	clog.Info("mount route for echo server.")
 	return router.NewEchoGateway(es.h)
+}
+
+// MountSwagRoute return the route after mounting swagger route.
+// Nothing to do if flag swag is false.
+func (es *EchoServer) MountSwagRoute() router.Route[router.EchoPack] {
+	gateway := es.MountRoute()
+	swagPeer := router.EchoPeer{}
+	swagPeer.ToEndpoint(router.Endpoint[echo.HandlerFunc, echo.MiddlewareFunc]{
+		Method:      http.MethodGet,
+		Path:        _echo_swagger_path,
+		Handler:     echoSwagger.WrapHandler,
+		PreHandlers: nil,
+	})
+	gateway.ToPeer(swagPeer)
+	return gateway
 }
 
 func (es *EchoServer) SetupEchoServer(opts ...EchoServerOption) {

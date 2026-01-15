@@ -12,6 +12,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/wendisx/puzzle/pkg/clog"
 	"github.com/wendisx/puzzle/pkg/palette"
+	"github.com/wendisx/puzzle/pkg/router"
 )
 
 const (
@@ -20,6 +21,13 @@ const (
 )
 
 type (
+	// WebServer is the basic abstraction for web server.
+	// P represents the route pack.
+	WebServer[P any] interface {
+		MountRoute() router.Route[P] // return the basic root router
+		Start()                      // starting server
+		Stop()                       // stopping server
+	}
 	webServer[H http.Handler] struct {
 		h    H
 		s    *http.Server

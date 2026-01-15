@@ -145,10 +145,15 @@ func (p *EchoPeer) ToEndpoint(ep Endpoint[echo.HandlerFunc, echo.MiddlewareFunc]
 // Parse parse all endpoints to the instance of global echo
 func (p EchoPeer) Parse(pp EchoPack) {
 	if len(p.qendpoint) == 0 {
-		clog.Warn("<pkg.router.echo> Call default Mount function, this method should be explicitly overridden and is eventually called.")
+		clog.Warn("Call default Mount function, this method should be explicitly overridden and is eventually called.")
 	}
 	for _, ep := range p.qendpoint {
-		pp.G.Add(ep.Method, ep.Path, ep.Handler, ep.PreHandlers...)
-		clog.Info(fmt.Sprintf("<pkg.router.echo> %s#%s", ep.Method, pp.P.Prefix+ep.Path))
+		if ep.PreHandlers != nil {
+			pp.G.Add(ep.Method, ep.Path, ep.Handler, ep.PreHandlers...)
+			clog.Info(fmt.Sprintf("endpoint %s#%s with %s pre handlers", palette.SkyBlue(ep.Method), palette.SkyBlue(pp.P.Prefix+ep.Path), palette.Green(len(ep.PreHandlers))))
+		} else {
+			pp.G.Add(ep.Method, ep.Path, ep.Handler)
+			clog.Info(fmt.Sprintf("endpoint %s#%s with no pre handlers", palette.SkyBlue(ep.Method), palette.SkyBlue(pp.P.Prefix+ep.Path)))
+		}
 	}
 }
