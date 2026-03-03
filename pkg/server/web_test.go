@@ -19,7 +19,12 @@ func (sp *ServerPeer) Parse(p router.EchoPack) {
 		Method: http.MethodGet,
 		Path:   "/ping",
 		Handler: func(c echo.Context) error {
-			return c.String(http.StatusOK, "pong")
+			res := NewEchoResponder(c)
+			return res.ResponseHttp(HttpEvent{
+				Type:     0x02,
+				HttpCode: http.StatusOK,
+				Data:     "pong",
+			})
 		},
 		PreHandlers: []echo.MiddlewareFunc{},
 	})
