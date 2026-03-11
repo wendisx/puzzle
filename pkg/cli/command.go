@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -12,22 +13,21 @@ import (
 	"github.com/wendisx/puzzle/pkg/util"
 )
 
+func init() {
+}
+
 const (
-	_default_command_path = "../../command.json"
-
-	_flag_type_int    = "int"
-	_flag_type_float  = "float"
-	_flag_type_string = "string"
-	_flag_type_bool   = "bool"
-
-	_default_value_int    = 0
-	_default_value_float  = 0
-	_default_value_string = ""
-	_default_value_bool   = false
+	// define valid flag type in command file.
+	FLAG_TYPE_INT    = "int"
+	FLAG_TYPE_FLOAT  = "float"
+	FLAG_TYPE_STRING = "string"
+	FLAG_TYPE_BOOL   = "bool"
 )
 
 var (
-	_dict_command *config.DataDict[any]
+	_default_command_path = "../../command.json"
+	// _dict_command         config.DataDict[any]
+	_default_delimiter = ":"
 )
 
 type (
@@ -37,6 +37,7 @@ type (
 		ShortName string `json:"shortName"` //  short name
 		Type      string `json:"type"`      //  value type
 		Desc      string `json:"desc"`      // description
+		Default   string `json:"default"`   // default value
 	}
 	// Command store command information.
 	Command struct {
@@ -57,6 +58,15 @@ type (
 	}
 )
 
+// DefaultCommandPath set default command path
+func DefaultCommandPath(path string) {
+	_default_command_path = path
+}
+
+func DefaultDelimiter(delimiter string) {
+	_default_delimiter = delimiter
+}
+
 // LoadCmd parse the specified file to the cli instance and
 // build the instruction dictionary.
 func LoadCmd(path string) *Cli {
@@ -64,17 +74,16 @@ func LoadCmd(path string) *Cli {
 		path = _default_command_path
 	}
 	var cli Cli
+	// todo: Perhaps different configuration file suffixes could be used to parse this,
+	// but JSON is already sufficient for the current functionality.
 	if err := util.ParseJsonFile(path, &cli); err != nil {
 		clog.Panic(err.Error())
 		return nil
 	}
-	// set default version for cli
-	_default_intro = cli.Intro
-	_default_version = cli.Version
 	// put cli into config dict
 	configDict := config.GetDict(config.DICTKEY_CONFIG)
 	configDict.Record(config.DATAKEY_CLI, &cli)
-	// load all command to dict_key(_dict_command_) data dict
+	// load all command to dict_key(_dict_command) data dict
 	var cmdDict config.DataDict[any]
 	if !config.HasDict(config.DICTKEY_COMMAND) {
 		cmdDict = config.NewDataDict[any](config.DICTKEY_COMMAND)
@@ -90,11 +99,11 @@ func LoadCmd(path string) *Cli {
 }
 
 // GetCmd return the pointer to Cli from config dict and will panic if not exists Cli.
-func GetCmd() *Cli {
+func GetCLI() *Cli {
 	configDict := config.GetDict(config.DICTKEY_CONFIG)
 	cli, ok := configDict.Find(config.DATAKEY_CLI).Value().(*Cli)
 	if !ok {
-		clog.Panic(fmt.Sprintf("from data_key(%s) assert to type(*CLi) fail", palette.Red(config.DATAKEY_CLI)))
+		clog.Panic(fmt.Sprintf("from data(%s) can't assert to type(*CLi)", palette.Red(config.DATAKEY_CLI)))
 	}
 	return cli
 }
@@ -104,17 +113,26 @@ func GetCmd() *Cli {
 func GetCommand(verb string, delimiter string) *cobra.Command {
 	// todo: delimiter == ["-", "_"]?
 	cmdKey := verb
-	if _dict_command == nil {
-		_dict_command = new(config.DataDict[any])
-		*_dict_command = config.GetDict(config.DICTKEY_COMMAND)
-	}
-	ccmd, ok := _dict_command.Find(cmdKey).Value().(*cobra.Command)
+	commandDict := config.GetDict(config.DICTKEY_COMMAND)
+	ccmd, ok := commandDict.Find(cmdKey).Value().(*cobra.Command)
 	if !ok {
 		clog.Panic(fmt.Sprintf("from data_key(%s) assert to type(*cobra.Command) fail", palette.Red(cmdKey)))
 	}
 	return ccmd
 }
 
+// MountCmd performs the same operation as the built-in mountCmd,
+// except that it mounts the commands to the specified dictionary.
+// If the specified dictionary does not exist, a panic is triggered.
+func MountCmd(verb string, cmd *Command, dictkey string) *cobra.Command {
+	dict := config.GetDict(config.DictKey(dictkey))
+	return mountCmd(verb, cmd, dict)
+}
+
+// The idea here is to try to enter from any top-level instruction in the already
+// successfully parsed CLI structure, but obviously this can be automatically
+// obtained during the recursion process, so it is retained here, but there is a
+// fast flag loading version.
 // ParsePersistenFlags return the list for persistent flag of specific verb. No panic here.
 func ParsePersistenFlags(verb string, delimiter string, entry *Cli) []Flag {
 	if entry == nil {
@@ -189,7 +207,8 @@ func mountCmd(verb string, cmd *Command, dict config.DataDict[any]) *cobra.Comma
 		Short: cmd.ShortDesc,
 		Long:  cmd.LongDesc,
 	}
-	mountFlag(verb, curCmd)
+	// mountFlag(verb, curCmd) -- Old version implementation
+	quickMountFLag(verb, cmd, curCmd)
 	dict.Record(verb, curCmd)
 	for i := range cmd.SubCommand {
 		nextCmd := mountCmd(verb, &cmd.SubCommand[i], dict)
@@ -200,13 +219,12 @@ func mountCmd(verb string, cmd *Command, dict config.DataDict[any]) *cobra.Comma
 	return curCmd
 }
 
+// using recursive search
 func mountFlag(verb string, cmd *cobra.Command) {
 	if cmd == nil {
 		return
 	}
-	cli := GetCmd()
-	// lFlags := cmd.LocalFlags()
-	// pFlags := cmd.PersistentFlags()
+	cli := GetCLI()
 	flags := cmd.Flags()
 	for _, f := range ParseLocalFlags(verb, _default_delimiter, cli) {
 		expandFlag(flags, f)
@@ -214,6 +232,23 @@ func mountFlag(verb string, cmd *cobra.Command) {
 	for _, f := range ParsePersistenFlags(verb, _default_delimiter, cli) {
 		expandFlag(flags, f)
 	}
+	clog.Info(fmt.Sprintf("for verb(%s) mount local and persistent flags", palette.SkyBlue(verb)))
+}
+
+// using current context information
+func quickMountFLag(verb string, originCmd *Command, treeCmd *cobra.Command) {
+	if originCmd == nil || treeCmd == nil {
+		return
+	}
+	flags := treeCmd.Flags()
+	for _, f := range originCmd.LocalFlags {
+		expandFlag(flags, f)
+	}
+	clog.Info(fmt.Sprintf("parse verb(%s) local +[%s] Flags", palette.SkyBlue(verb), palette.Green(len(originCmd.LocalFlags))))
+	for _, f := range originCmd.PersistentFlags {
+		expandFlag(flags, f)
+	}
+	clog.Info(fmt.Sprintf("parse verb(%s) persistent +[%s] Flags", palette.SkyBlue(verb), palette.Green(len(originCmd.LocalFlags))))
 	clog.Info(fmt.Sprintf("for verb(%s) mount local and persistent flags", palette.SkyBlue(verb)))
 }
 
@@ -226,14 +261,26 @@ func expandFlag(fset *pflag.FlagSet, f Flag) {
 		f.ShortName = ""
 	}
 	switch f.Type {
-	case _flag_type_bool:
-		fset.BoolP(f.FullName, f.ShortName, _default_value_bool, f.Desc)
-	case _flag_type_int:
-		fset.IntP(f.FullName, f.ShortName, _default_value_int, f.Desc)
-	case _flag_type_float:
-		fset.Float64P(f.FullName, f.ShortName, _default_value_float, f.Desc)
-	case _flag_type_string:
-		fset.StringP(f.FullName, f.ShortName, _default_value_string, f.Desc)
+	case FLAG_TYPE_BOOL:
+		v, err := strconv.ParseBool(f.Default)
+		if err != nil {
+			clog.Error(fmt.Sprintf("flag value(%s) mismatch type(%s)", palette.Red(f.Default), palette.Red(FLAG_TYPE_BOOL)))
+		}
+		fset.BoolP(f.FullName, f.ShortName, v, f.Desc)
+	case FLAG_TYPE_INT:
+		v, err := strconv.Atoi(f.Default)
+		if err != nil {
+			clog.Error(fmt.Sprintf("flag value(%s) mismatch type(%s)", palette.Red(f.Default), palette.Red(FLAG_TYPE_INT)))
+		}
+		fset.IntP(f.FullName, f.ShortName, v, f.Desc)
+	case FLAG_TYPE_FLOAT:
+		v, err := strconv.ParseFloat(f.Default, 1<<6)
+		if err != nil {
+			clog.Error(fmt.Sprintf("flag value(%s) mismatch type(%s)", palette.Red(f.Default), palette.Red(FLAG_TYPE_FLOAT)))
+		}
+		fset.Float64P(f.FullName, f.ShortName, v, f.Desc)
+	case FLAG_TYPE_STRING:
+		fset.StringP(f.FullName, f.ShortName, f.Default, f.Desc)
 	default:
 		clog.Warn(fmt.Sprintf("for flag(%s) with invalid type(%s)", palette.SkyBlue(f.FullName), palette.Red(f.Type)))
 	}

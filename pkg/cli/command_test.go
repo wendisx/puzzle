@@ -64,7 +64,7 @@ func Test_get_flags(t *testing.T) {
 
 // test get cli from data dict  [passed]
 func print_cli() {
-	cli := GetCmd()
+	cli := GetCLI()
 	clog.Info(fmt.Sprintf("%#v", cli))
 }
 
