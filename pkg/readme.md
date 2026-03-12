@@ -131,3 +131,14 @@ go doc -http
 You can use the [Swagger tool](https://github.com/swaggo/swag) to generate integrated Open API documentation and then mount 
 the specified routes on the server. This requires the integrated web framework to handle 
 it automatically, which is no different from the default integrated echo Swagger operation.
+
+### PUZZLE CLI
+
+Puzzle CLI is currently used to obtain certain project templates and configuration templates, mainly to reduce unnecessary manual operations and hassles. This is very common in engineering practice.
+
+You can install the puzzle binary directly via Go, but it's recommended to build it in **docker or locally**, as this helps reduce unnecessary environment issues.
+
+```bash
+// check installation
+puzzle version
+```

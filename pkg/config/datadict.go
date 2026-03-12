@@ -11,8 +11,14 @@ import (
 )
 
 var (
+	// The global dictionary directory is used to
+	// record all dictionaries currently in memory.
 	_dict_directory *DictDirectory
-	_dict_timeout   = 10 * time.Minute
+	// The default field for all dictionaries is the expiration time,
+	// used to clear short-lived values ​​during the build phase.
+	_dict_timeout = 10 * time.Minute
+	// some default key from internal, exactly I'd like to got them from some .json files. :)
+	_dict_capacity uint64 = 1 << 10
 )
 
 type (
@@ -37,7 +43,7 @@ func PutDict(k DictKey, dict DataDict[any]) {
 func GetDict(k DictKey) DataDict[any] {
 	dd, found := _dict_directory.find(string(k))
 	if !found {
-		clog.Panic(fmt.Sprintf("from dict directory can't find dict_key(%s)", palette.Red(k)))
+		clog.Panic(fmt.Sprintf("from dict directory can't find the dict(%s)", palette.Red(k)))
 	}
 	return dd
 }
@@ -51,7 +57,7 @@ func HasDict(k DictKey) bool {
 // Create the broadest data dictionary and only allow this data dictionary to enter _dict_directory.
 func (ds *DictDirectory) record(k string, dict DataDict[any]) {
 	ds.qdict.Store(k, dict)
-	clog.Info(fmt.Sprintf("put dict_key(%s) into dict directory", palette.SkyBlue(k)))
+	clog.Info(fmt.Sprintf("put dict(%s) into dict directory", palette.SkyBlue(k)))
 }
 
 func (ds *DictDirectory) find(k string) (DataDict[any], bool) {
@@ -66,8 +72,13 @@ func NextDictTTL(ttl time.Duration) {
 	_dict_timeout = ttl
 }
 
+// NextDictCap set cap used by next dict.
+func NextDictCap(cap uint64) {
+	_dict_capacity = cap
+}
+
 // NewDataDict return a data dict with string key.
-func NewDataDict[V any](name DictKey) DataDict[V] {
+func NewDataDict[V any](name string) DataDict[V] {
 	dd := ttlcache.New(
 		ttlcache.WithCapacity[string, V](_dict_capacity),
 		ttlcache.WithTTL[string, V](_dict_timeout),
@@ -85,13 +96,13 @@ func (dd *DataDict[V]) Name() DictKey {
 
 func (dd *DataDict[V]) Record(k string, v V) {
 	dd.dict.Set(k, v, ttlcache.DefaultTTL)
-	clog.Info(fmt.Sprintf("put data_key(%s) into dict_key(%s)", palette.SkyBlue(k), palette.SkyBlue(dd.name)))
+	clog.Info(fmt.Sprintf("put data(%s) into dict(%s)", palette.SkyBlue(k), palette.SkyBlue(dd.name)))
 }
 
 // Find return Item with specific key and will panic if not exists the data.
 func (dd *DataDict[V]) Find(k string) *ttlcache.Item[string, V] {
 	if !dd.dict.Has(k) {
-		clog.Panic(fmt.Sprintf("from dict_key(%s) can't find data_key(%s)", palette.Red(dd.name), palette.Red(k)))
+		clog.Panic(fmt.Sprintf("from dict(%s) can't find data(%s)", palette.Red(dd.name), palette.Red(k)))
 	}
 	return dd.dict.Get(k)
 }

@@ -40,31 +40,36 @@
                             "fullName": "host",
                             "shortName": "",
                             "type": "string",
-                            "desc": "server start host"
+                            "desc": "server start host",
+                            "default": "127.0.0.1"
                         },
                         {
                             "fullName": "port",
                             "shortName": "",
                             "type": "int",
-                            "desc": "server listening port"
+                            "desc": "server listening port",
+                            "default": "3333"
                         },
                         {
                             "fullName": "check",
                             "shortName": "",
                             "type": "bool",
-                            "desc": "mount check peer"
+                            "desc": "mount check peer",
+                            "default": "true"
                         },
                         {
                             "fullName": "swag",
                             "shortName": "",
                             "type": "bool",
-                            "desc": "mount swagger peer"
+                            "desc": "mount swagger peer",
+                            "default": "false"
                         },
                         {
                             "fullName": "handler",
                             "shortName": "",
                             "type": "string",
-                            "desc": "specify handler used by server"
+                            "desc": "specify handler used by server",
+                            "default": "Echo"
                         }
                     ],
                     "subCommands": []

@@ -5,4 +5,5 @@ script/
 README.md
 demo/
 doc/
-internal/
+bin/
+test/

@@ -1,15 +1,16 @@
 package cli
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
-	"github.com/wendisx/puzzle/pkg/clog"
 	"github.com/wendisx/puzzle/pkg/config"
 )
 
 var (
-	_exists_root       = false
-	_verb_root         = "root"
-	_default_delimiter = ":"
+	_exists_root = false
+	_verb_root   = "root"
 
 	_default_root_use   = "puzzle"
 	_default_root_short = ""
@@ -20,8 +21,12 @@ func RootVerb(verb string) {
 	_verb_root = verb
 }
 
-func DefaultDelimiter(delimiter string) {
-	_default_delimiter = delimiter
+func RootShort(short string) {
+	_default_root_short = short
+}
+
+func RootLong(long string) {
+	_default_root_long = long
 }
 
 func mountRoot() *cobra.Command {
@@ -32,11 +37,8 @@ func mountRoot() *cobra.Command {
 			Short: _default_root_short,
 			Long:  _default_root_long,
 		}
-		if _dict_command == nil {
-			_dict_command = new(config.DataDict[any])
-			*_dict_command = config.GetDict(config.DICTKEY_COMMAND)
-		}
-		_dict_command.Record(_verb_root, rootCmd)
+		commandDict := config.GetDict(config.DICTKEY_COMMAND)
+		commandDict.Record(_verb_root, rootCmd)
 		_exists_root = true
 	} else {
 		rootCmd = GetCommand(_verb_root, _default_delimiter)
@@ -54,6 +56,7 @@ func mountRoot() *cobra.Command {
 // can only add commands that are not related to business logic to the command tree as tools,
 // and the commands related to writing later can be set in the actual project.
 func Execute(mountFuncs ...func(*cobra.Command)) {
+	exitText := `Perhaps you need to use the **help** command for some assistance.`
 	rootCmd := mountRoot()
 	// todo: Change to optional mounting, only mounting general utility commands.
 	// MountVersion(rootCmd)
@@ -62,6 +65,7 @@ func Execute(mountFuncs ...func(*cobra.Command)) {
 		mountFuncs[i](rootCmd)
 	}
 	if err := rootCmd.Execute(); err != nil {
-		clog.Fatal(err.Error())
+		fmt.Fprintln(os.Stderr, exitText)
+		os.Exit(1)
 	}
 }
