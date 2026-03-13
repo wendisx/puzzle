@@ -118,3 +118,29 @@ func (dd *DataDict[V]) Remove(k string) {
 func (dd *DataDict[V]) RemoveAll() {
 	dd.dict.DeleteAll()
 }
+
+func (dd *DataDict[V]) Len() int {
+	return dd.dict.Len()
+}
+
+func (dd *DataDict[V]) Keys(filter func(k string) bool) []string {
+	if filter == nil {
+		return dd.dict.Keys()
+	}
+	keys := make([]string, 0, dd.dict.Len())
+	for _, key := range dd.dict.Keys() {
+		if filter(key) {
+			keys = append(keys, key)
+		}
+	}
+	return keys
+}
+
+func LoadDict(dictkey string) {
+	if HasDict(DictKey(dictkey)) {
+		return
+	}
+	dict := NewDataDict[any](dictkey)
+	PutDict(dict.Name(), dict)
+	clog.Info(fmt.Sprintf("load dict(%s) manually", palette.SkyBlue(dictkey)))
+}

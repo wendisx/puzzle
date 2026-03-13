@@ -41,18 +41,18 @@ func MountBuiltinNew(rootCmd *cobra.Command) {
 	}
 	newCmd := cli.MountCmd("", _newCmd, config.DICTKEY_COMMAND)
 	newCmd.RunE = func(cmd *cobra.Command, args []string) error {
-		tempf, err := cmd.Flags().GetString(_newCmd.LocalFlags[0].FullName)
-		destf, err := cmd.Flags().GetString(_newCmd.LocalFlags[1].FullName)
+		f_template, err := cmd.Flags().GetString(_newCmd.LocalFlags[0].FullName)
+		f_dest, err := cmd.Flags().GetString(_newCmd.LocalFlags[1].FullName)
 		if err != nil {
 			return err
 		}
-		return execNew(tempf, destf)
+		return execNew(f_template, f_dest)
 	}
 	rootCmd.AddCommand(newCmd)
 }
 
-func execNew(tempf, dest string) error {
-	if _template_map[tempf].Ref == "" {
+func execNew(template, dest string) error {
+	if _template_map[template].Ref == "" {
 		return errors.New("template should be non-empty and valid.")
 	}
 	// check dest: dest should be a dir or file with the same suffix.
@@ -60,11 +60,11 @@ func execNew(tempf, dest string) error {
 	if err != nil {
 		return err
 	}
-	fileName := dest + _template_map[tempf].Ref
+	fileName := dest + _template_map[template].Ref
 	if info.Mode().IsRegular() {
 		ext := strings.ToLower(filepath.Ext(dest))
-		if ext != _template_map[tempf].Suffix {
-			return fmt.Errorf("mismatched suffix: %s but need %s", ext, _template_map[tempf].Suffix)
+		if ext != _template_map[template].Suffix {
+			return fmt.Errorf("mismatched suffix: %s but need %s", ext, _template_map[template].Suffix)
 		}
 		fileName = dest
 	}
@@ -80,7 +80,7 @@ func execNew(tempf, dest string) error {
 	}
 	buf := bufio.NewWriter(f)
 	api := GithubApi{}
-	resp, err := http.Get(api.RawFile(_gitapi_raw_data, &remote, _template_map[tempf].Ref))
+	resp, err := http.Get(api.RawFile(_gitapi_raw_data, &remote, _template_map[template].Ref))
 	if err != nil || resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusInternalServerError {
 		_ = os.Remove(fileName)
 		return err

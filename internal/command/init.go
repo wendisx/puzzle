@@ -44,22 +44,22 @@ func MountBuiltinInit(rootCmd *cobra.Command) {
 	}
 	initCmd := cli.MountCmd("", _initCmd, config.DICTKEY_COMMAND)
 	initCmd.RunE = func(cmd *cobra.Command, args []string) error {
-		tempf, err := cmd.Flags().GetString(_initCmd.LocalFlags[0].FullName)
-		dest, err := cmd.Flags().GetString(_initCmd.LocalFlags[1].FullName)
+		f_template, err := cmd.Flags().GetString(_initCmd.LocalFlags[0].FullName)
+		f_dest, err := cmd.Flags().GetString(_initCmd.LocalFlags[1].FullName)
 		if err != nil {
 			return err
 		}
-		if _template_map[tempf].Ref == "" {
+		if _template_map[f_template].Ref == "" {
 			return fmt.Errorf("template should be non-empty and valid.")
 		}
-		f, err := os.Stat(dest)
+		f, err := os.Stat(f_dest)
 		if err != nil {
 			return err
 		}
 		if !f.IsDir() {
-			dest = "."
+			f_dest = "."
 		}
-		dest = filepath.Clean(dest)
+		f_dest = filepath.Clean(f_dest)
 		// align initial directory
 		// apiUrl like: https://api.github.com/repos/owner/repo_name/contents/src?ref=branch_name
 		remote := config.GetConfig().GithubConfig
@@ -69,7 +69,7 @@ func MountBuiltinInit(rootCmd *cobra.Command) {
 		src := fmt.Sprintf(_gitapi_content_info,
 			remote.UserName,
 			remote.Repos[remote.ActiveRepo].Name,
-			_template_map[tempf].Ref,
+			_template_map[f_template].Ref,
 			remote.Repos[remote.ActiveRepo].Ref,
 		)
 		src = remote.ApiHost + filepath.Clean(src)
@@ -79,9 +79,9 @@ func MountBuiltinInit(rootCmd *cobra.Command) {
 			Timeout: 10 * time.Second,
 		}
 		clog.Warn("enter syncTemplate")
-		err = syncTemplate(&remote, client, src, dest)
+		err = syncTemplate(&remote, client, src, f_dest)
 		if err != nil {
-			_ = os.RemoveAll(dest)
+			_ = os.RemoveAll(f_dest)
 			return err
 		}
 		select {
@@ -90,7 +90,7 @@ func MountBuiltinInit(rootCmd *cobra.Command) {
 		default:
 			FileSynchronizer.Wait()
 		}
-		fmt.Fprintf(os.Stderr, "Sync all template files to %s.\n", dest)
+		fmt.Fprintf(os.Stderr, "Sync all template files to %s.\n", f_dest)
 		return nil
 	}
 	rootCmd.AddCommand(initCmd)

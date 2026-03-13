@@ -16,6 +16,7 @@ todo:
 - [Config](#config)
 - [Cli](#cli) 
 - [Server](#server)
+- [Event](#event)
 - [Integration](#integration)
 - [Reference](#reference)
 
@@ -105,6 +106,12 @@ and integrated according to the server interfaces.
 |`Echo`| ✅ |
 |`Gin`| ❌ |
 |`Chi`| ❌ |
+
+## <a id="event">Event</a>
+
+The event includes basic event-driven model interfaces and general implementations. These interfaces need to be implemented and their functionality extended by the user. A basic event model implementation is also provided. However, in actual development, it is recommended to encapsulate or override these implementations. This only meets general needs and does not guarantee performance for specific requirements.
+
+*A unified event-related model may be implemented in the future.*
 
 ## <a id="integration">Integration</a>
 

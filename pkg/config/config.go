@@ -24,6 +24,7 @@ const (
 	DICTKEY_SERVER  = "_dict_server"
 	DICTKEY_SERVICE = "_dict_service"
 	DICTKEY_CLIENT  = "_dict_client"
+	DICTKEY_EVENT   = "_dict_event"
 )
 
 const (
